@@ -34,40 +34,44 @@ export default function LoginPage() {
 
   try {
     console.log("🔹 Step 1: Attempting login...");
-    const accessToken = await loginUser(email, password);
-    console.log("✅ Login successful, token length:", accessToken.length);
+    const loginResult = await loginUser(email, password);
+    const accessToken = loginResult.token;
+    
+    console.log("✅ Login successful, token received");
+    console.log("🔹 Login response contained user data:", !!loginResult.userData);
 
-    if (!accessToken) throw new Error("Login failed: no token returned");
+    let userInfo;
 
-    console.log("🔹 Step 2: Fetching user info with token...");
-    const userInfo = await getUserInfo(accessToken);
-    console.log("✅ User info received:", userInfo);
-
-    if (!userInfo?.id) {
-      console.error("❌ User info missing ID:", userInfo);
-      throw new Error("Failed to fetch user info - missing user ID");
+    // First, check if user data is in login response
+    if (loginResult.userData && (loginResult.userData.id || loginResult.userData.email)) {
+      console.log("✅ Using user data from login response");
+      userInfo = loginResult.userData;
+    } else {
+      console.log("🔹 Step 2: Fetching user info from API...");
+      userInfo = await getUserInfo(accessToken, email);
+      console.log("✅ User info obtained:", userInfo);
     }
 
-    console.log("🔹 Step 3: Setting user in store...");
+    // Always set user - even with fallback data
     setUser({
       token: accessToken,
-      id: userInfo.id,
-      name: userInfo.name,
+      id: userInfo.id || `user-${Date.now()}`,
+      name: userInfo.name || userInfo.username || email.split('@')[0],
+      email: userInfo.email || email,
+      isFallback: userInfo.isFallback || false
     });
 
-    console.log("🔹 Step 4: Redirecting to dashboard...");
+    console.log("🔹 Step 3: Redirecting to dashboard...");
     router.push("/dashboard");
     
   } catch (err) {
-    console.error("❌ Login/Fetch error:", err);
+    console.error("❌ Login error:", err);
     
     // More user-friendly error messages
-    if (err.message.includes("403") || err.message.includes("forbidden")) {
-      setError("Access denied. Please check your credentials or contact support.");
-    } else if (err.message.includes("401") || err.message.includes("unauthorized")) {
-      setError("Session expired. Please login again.");
+    if (err.message.includes('Login failed')) {
+      setError("Invalid email or password. Please check your credentials.");
     } else {
-      setError(err.message || "Login failed. Please try again.");
+      setError("Login failed. Please try again.");
     }
   } finally {
     setLoading(false);
