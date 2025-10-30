@@ -33,13 +33,13 @@ export default function LoginPage() {
   setError("");
 
   try {
-    console.log("🔹 Step 1: Logging in...");
+    console.log("🔹 Step 1: Attempting login...");
     const accessToken = await loginUser(email, password);
-    console.log("✅ Access Token received:", accessToken ? "Yes" : "No");
+    console.log("✅ Login successful, token length:", accessToken.length);
 
     if (!accessToken) throw new Error("Login failed: no token returned");
 
-    console.log("🔹 Step 2: Fetching user info...");
+    console.log("🔹 Step 2: Fetching user info with token...");
     const userInfo = await getUserInfo(accessToken);
     console.log("✅ User info received:", userInfo);
 
@@ -60,7 +60,15 @@ export default function LoginPage() {
     
   } catch (err) {
     console.error("❌ Login/Fetch error:", err);
-    setError(err.message || "Login failed. Please check console for details.");
+    
+    // More user-friendly error messages
+    if (err.message.includes("403") || err.message.includes("forbidden")) {
+      setError("Access denied. Please check your credentials or contact support.");
+    } else if (err.message.includes("401") || err.message.includes("unauthorized")) {
+      setError("Session expired. Please login again.");
+    } else {
+      setError(err.message || "Login failed. Please try again.");
+    }
   } finally {
     setLoading(false);
   }
@@ -71,13 +79,13 @@ export default function LoginPage() {
       <div className="left-section">
         <h1>Welcome back</h1>
         <p className="subtitle">
-          Step into our shopping metaverse for an unforgettable experience
+          Step into our shopping metaverse for an <br></br> unforgettable shopping experience
         </p>
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <div className="input-wrapper">
-              <img src="/images/email.png" alt="email" style={{ width: 20 }} />
+              <img src="/images/sms.png" alt="email" style={{ width: 20 }} />
               <input
                 type="email"
                 placeholder="Email"
@@ -91,7 +99,7 @@ export default function LoginPage() {
           <div className="input-group">
             <div className="input-wrapper">
               <img
-                src="/images/locked-computer.png"
+                src="/images/lock.png"
                 alt="password"
                 style={{ width: 20 }}
               />
@@ -112,6 +120,10 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
+
+          <div class="signup-link">
+            Dont have an account? <a href="#">Sign up</a>
+          </div>
 
           {error && (
             <p style={{ color: "red", textAlign: "center" }}>{error}</p>

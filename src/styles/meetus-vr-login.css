@@ -136,13 +136,14 @@ input::placeholder {
   color: white;
   cursor: pointer;
   margin-top: 36px;
-  margin-bottom: 36px;
+  margin-bottom: 18px;
 }
 
 .signup-link {
   font-family: "ABeeZee", sans-serif;
   font-size: 14px;
   font-weight: 400;
+  color: #62626B;
   text-align: center;
   line-height: 155%;
   letter-spacing: 0%;
@@ -151,9 +152,9 @@ input::placeholder {
 }
 
 .signup-link a {
-  color: #000;
+  color: #62626B;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .shape {
